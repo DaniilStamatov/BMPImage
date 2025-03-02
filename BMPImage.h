@@ -46,18 +46,8 @@ class BMPImage {
     void Plot(int x, int y, uint8_t r, uint8_t g, uint8_t b);
     void LoadFromFile(const std::string& filename);
     void ReadPixels(std::ifstream& is, int pixelSize);
-    void WriteHeaders(std::ofstream& of) {
-        of.write((const char*)&m_header, sizeof(m_header));
-        of.write((const char*)&m_infoHeader, sizeof(m_infoHeader));
-        if (m_infoHeader.bitCount == 32) {
-            of.write((const char*)&m_colorHeader, sizeof(m_colorHeader));
-        }
-    }
-
-    void WriteHeadersAndData(std::ofstream& of) {
-        WriteHeaders(of);
-        of.write((const char*)m_pixels.data(), m_pixels.size());
-    }
+    void WriteHeaders(std::ofstream& of);
+    void WriteHeadersAndData(std::ofstream& of);
 
    private:
     BMPHeader m_header;

@@ -116,3 +116,16 @@ void BMPImage::ReadPixels(std::ifstream& is, int pixelSize) {
         }
     }
 }
+
+void BMPImage::WriteHeaders(std::ofstream& of) {
+    of.write((const char*)&m_header, sizeof(m_header));
+    of.write((const char*)&m_infoHeader, sizeof(m_infoHeader));
+    if (m_infoHeader.bitCount == 32) {
+        of.write((const char*)&m_colorHeader, sizeof(m_colorHeader));
+    }
+}
+
+void BMPImage::WriteHeadersAndData(std::ofstream& of) {
+    WriteHeaders(of);
+    of.write((const char*)m_pixels.data(), m_pixels.size());
+}
