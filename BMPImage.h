@@ -3,7 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-
+#define COLOR_BLACK 0
+#define COLOR_WHITE 255
 #pragma pack(push, 1)
 struct BMPHeader {
     uint16_t fileType;
@@ -40,7 +41,7 @@ class BMPImage {
     BMPImage(const std::string& filename);
     void Display() const;
     void Save(const std::string& filename);
-    void DrawLine(int x1, int y1, int x2, int y2);
+    void DrawLine(int x1, int y1, int x2, int y2, int color);
 
    private:
     void Plot(int x, int y, uint8_t r, uint8_t g, uint8_t b);
@@ -50,6 +51,7 @@ class BMPImage {
     void WriteHeadersAndData(std::ofstream& of);
 
    private:
+    const static uint16_t m_colorHeaderSize = 84;
     BMPHeader m_header;
     BMPColorHeader m_colorHeader;
     BMPInfoHeader m_infoHeader;

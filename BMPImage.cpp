@@ -22,7 +22,7 @@ void BMPImage::Display() const {
     }
 }
 
-void BMPImage::DrawLine(int x1, int y1, int x2, int y2) {
+void BMPImage::DrawLine(int x1, int y1, int x2, int y2, int color) {
     int deltax = abs(x2 - x1);
     int deltay = abs(y2 - y1);
     int error = 0;
@@ -34,7 +34,7 @@ void BMPImage::DrawLine(int x1, int y1, int x2, int y2) {
         std::swap(y1, y2);
     }
     for (int x = x1; x <= x2; ++x) {
-        Plot(x, y, 0, 0, 0);
+        Plot(x, y, color, color, color);
         error += deltaerr;
         if (error >= (deltax + 1)) {
             y += diry;
@@ -84,11 +84,12 @@ void BMPImage::LoadFromFile(const std::string& filename) {
     if (m_infoHeader.bitCount < 24) throw std::runtime_error("Unknown format");
 
     m_width = m_infoHeader.width;
+    
     m_height = abs(m_infoHeader.height);
-
+    std::cout << m_width << " " << m_height << std::endl;
     if (m_infoHeader.bitCount == 32) {
-        m_infoHeader.size = sizeof(BMPInfoHeader) + 84;
-        m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader) + 84;
+        m_infoHeader.size = sizeof(BMPInfoHeader) + m_colorHeaderSize;
+        m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader) + m_colorHeaderSize;
     } else {
         m_infoHeader.size = sizeof(BMPInfoHeader);
         m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader);
@@ -109,11 +110,18 @@ void BMPImage::ReadPixels(std::ifstream& is, int pixelSize) {
         is.read((char*)(m_pixels.data()), m_pixels.size());
         m_header.fileSize += static_cast<uint32_t>(m_pixels.size());
     } else {
-        for (int y = 0; y < m_height; ++y) {
-            if (m_width % 4 != 0) {
-                is.ignore((4 - (m_width * pixelSize % 4)) % 4);
-            }
+        std::cout << "here111" << std::endl;
+        int row_stride = m_infoHeader.width * pixelSize;
+        uint32_t new_stride = row_stride;
+        while (new_stride % 4 != 0) {
+            new_stride++;
         }
+        std::vector<uint8_t> padding_row(new_stride - row_stride);
+        for (int y = 0; y < m_height; ++y) {
+            is.read((char*)(m_pixels.data() + row_stride * y), row_stride);
+            is.read((char*)padding_row.data(), padding_row.size());
+        }
+        m_header.fileSize += static_cast<uint32_t>(m_pixels.size()) + m_infoHeader.height * static_cast<uint32_t>(padding_row.size());
     }
 }
 
