@@ -88,8 +88,8 @@ void BMPImage::LoadFromFile(const std::string& filename) {
     m_height = abs(m_infoHeader.height);
     std::cout << m_width << " " << m_height << std::endl;
     if (m_infoHeader.bitCount == 32) {
-        m_infoHeader.size = sizeof(BMPInfoHeader) + m_colorHeaderSize;
-        m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader) + m_colorHeaderSize;
+        m_infoHeader.size = sizeof(BMPInfoHeader) + sizeof(BMPColorHeader);
+        m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader) + sizeof(BMPColorHeader);
     } else {
         m_infoHeader.size = sizeof(BMPInfoHeader);
         m_header.dataOffset = sizeof(BMPHeader) + sizeof(BMPInfoHeader);

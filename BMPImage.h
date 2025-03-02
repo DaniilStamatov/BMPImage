@@ -51,7 +51,6 @@ class BMPImage {
     void WriteHeadersAndData(std::ofstream& of);
 
    private:
-    const static uint16_t m_colorHeaderSize = 84;
     BMPHeader m_header;
     BMPColorHeader m_colorHeader;
     BMPInfoHeader m_infoHeader;
