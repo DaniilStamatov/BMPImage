@@ -42,6 +42,6 @@ class BMPImage {
     BMPHeader m_header;
     BMPInfoHeader m_infoHeader;
     std::vector<uint8_t> m_pixels;
-    size_t m_width;
-    size_t m_height;
+    int m_width;
+    int m_height;
 };

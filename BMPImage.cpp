@@ -27,7 +27,7 @@ void BMPImage::display() const {
     int pixelSize = m_infoHeader.bitCount / 8;
     int rowSize = (m_width * pixelSize);
     for (int y = m_height - 1; y >= 0; --y) {
-        for (size_t x = 0; x < m_width; ++x) {
+        for (int x = 0; x < m_width; ++x) {
             int index = (y * rowSize) + (x * pixelSize);
             uint8_t b = m_pixels[index];
             uint8_t g = m_pixels[index + 1];
@@ -65,51 +65,30 @@ void BMPImage::drawLine(int x1, int y1, int x2, int y2) {
 }
 
 void BMPImage::save(const std::string& filename) {
-    std::ofstream os(filename, std::ios::binary);
+    std::ofstream os(filename.c_str(), std::ios::out | std::ios::binary);
     if (!os) {
         throw std::runtime_error("Could not open file " + filename);
     }
 
-    os.put('B');
-    os.put('M');
-    os.write(reinterpret_cast<const char*>(&m_header.fileSize), sizeof(m_header.fileSize));
-    os.write(reinterpret_cast<const char*>(&m_header.reserved1), sizeof(m_header.reserved1));
-    os.write(reinterpret_cast<const char*>(&m_header.reserved2), sizeof(m_header.reserved2));
-    os.write(reinterpret_cast<const char*>(&m_header.dataOffset), sizeof(m_header.dataOffset));
-
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.size), sizeof(m_infoHeader.size));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.width), sizeof(m_infoHeader.width));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.height), sizeof(m_infoHeader.height));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.planes), sizeof(m_infoHeader.planes));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.bitCount), sizeof(m_infoHeader.bitCount));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.compression), sizeof(m_infoHeader.compression));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.imageSize), sizeof(m_infoHeader.imageSize));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.xPixelsPerM), sizeof(m_infoHeader.xPixelsPerM));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.yPixelsPerM), sizeof(m_infoHeader.yPixelsPerM));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.colorsUsed), sizeof(m_infoHeader.colorsUsed));
-    os.write(reinterpret_cast<const char*>(&m_infoHeader.colorsImportant),
-             sizeof(m_infoHeader.colorsImportant));
-
+    os.write((char*)(&m_header), sizeof(m_header));
+    os.write((char*)(&m_infoHeader), sizeof(m_infoHeader));
     os.seekp(m_header.dataOffset, std::ios::beg);
-
     int pixelSize = m_infoHeader.bitCount / 8;
     int rowSize = (m_width * pixelSize + 3) & ~3;
-    for (int y = 0; y < (int)m_height; ++y) {
-        for (int x = 0; x < (int)m_width; ++x) {
-            int index = (y * rowSize) + (x * pixelSize);
-            m_pixels[index] = 255;
-            m_pixels[index + 1] = 255;
-            m_pixels[index + 2] = 255;
-            if (pixelSize == 4) {
-                m_pixels[index + 3] = 255;
-            }
+
+    if (m_width % 4 == 0) {
+        for (int y = 0; y < m_height; ++y) {
+            os.write(reinterpret_cast<const char*>(&m_pixels[y * rowSize]), rowSize);
+        }
+    } else {
+        uint32_t new_stride = rowSize;
+        std::vector<uint8_t> padding_row(new_stride - (m_width * pixelSize));
+
+        for (int y = 0; y < m_height; ++y) {
+            os.write(reinterpret_cast<const char*>(&m_pixels[y * rowSize]), rowSize);
+            os.write(reinterpret_cast<const char*>(padding_row.data()), padding_row.size());
         }
     }
-    for (int y = 0; y < (int)m_height; ++y) {
-        os.write(reinterpret_cast<const char*>(&m_pixels[y * rowSize]), rowSize);
-    }
-
-    os.close();
 }
 
 void BMPImage::plot(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
@@ -146,16 +125,15 @@ void BMPImage::LoadFromFile(const std::string& filename) {
     if (m_infoHeader.bitCount < 24) throw std::runtime_error("Unknown format");
     m_width = m_infoHeader.width;
     m_height = abs(m_infoHeader.height);
-    std::cout << m_width << " " << m_height << std::endl;
-
     int pixelSize = m_infoHeader.bitCount / 8;
     int rowSize = (m_width * pixelSize + 3) & ~3;
-    int size = rowSize * m_height;
-    m_pixels.resize(size);
+    m_pixels.resize(rowSize * m_height);
+
     is.seekg(m_header.dataOffset, std::ios::beg);
-    is.seekg(m_header.dataOffset, std::ios::beg);
-    for (int y = 0; y < (int)m_height; ++y) {
+
+    for (int y = 0; y < m_height; ++y) {
         is.read(reinterpret_cast<char*>(&m_pixels[y * rowSize]), rowSize);
     }
+
     is.close();
 }

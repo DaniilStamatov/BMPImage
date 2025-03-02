@@ -1,8 +1,8 @@
 #include "BMPImage.h"
 
 int main() {
-    BMPImage image("icon.bmp");
-    BMPImage image1("new_icon.bmp");
-    image1.save("new_icon.bmp");
+    BMPImage image("new_icon2.bmp");
+    image.display();
+    image.save("new_icon2.bmp");
     return 0;
 }
