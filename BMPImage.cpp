@@ -131,8 +131,12 @@ void BMPImage::LoadFromFile(const std::string& filename) {
 
     is.seekg(m_header.dataOffset, std::ios::beg);
 
-    for (int y = 0; y < m_height; ++y) {
+     for (int y = 0; y < m_height; ++y) {
         is.read(reinterpret_cast<char*>(&m_pixels[y * rowSize]), rowSize);
+        
+        if (m_width % 4 != 0) {
+            is.ignore((4 - (m_width * pixelSize % 4)) % 4);
+        }
     }
 
     is.close();
